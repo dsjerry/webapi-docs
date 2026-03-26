@@ -1,0 +1,96 @@
+---
+description: VitePress custom theme guidelines — CSS variables, dark mode, minimal overrides
+alwaysApply: true
+---
+
+# VitePress Theme Guidelines
+
+Keep customizations minimal. The default VitePress theme is already excellent — we override only what's necessary for our personality.
+
+## CSS Architecture
+
+- All custom CSS lives exclusively in `.vitepress/theme/custom.css`
+- Theme entry point: `.vitepress/theme/index.ts` — extends default theme only
+- Zero inline styles in markdown files
+- Zero new Vue components unless absolutely necessary
+
+## CSS Variables
+
+Use CSS variables for everything. Never hardcode hex values directly in rules.
+
+Define overrides in `:root` and `html.dark` (VitePress uses `class="dark"` on `<html>`, not `data-theme`):
+
+```css
+/* Light mode */
+:root {
+  --vp-c-brand-1: #646cff;   /* primary accent */
+  --vp-c-brand-2: #535bf2;
+  --vp-c-brand-3: #344e83;
+  --vp-c-brand-soft: rgba(100, 108, 255, 0.14);
+}
+
+/* Dark mode */
+html.dark {
+  --vp-c-brand-1: #7c8aff;
+  --vp-c-brand-2: #6b74ff;
+  --vp-c-brand-3: #4d5fd1;
+  --vp-c-brand-soft: rgba(124, 138, 255, 0.14);
+}
+```
+
+## Color Palette
+
+We use a distinctive violet-indigo accent (not the default blue/purple of most docs sites):
+- Primary: violet-indigo gradient feel (`#7c8aff` to `#535bf2`)
+- Danger: coral-red (`#f43f5e`)
+- Tip: teal (`#14b8a6`)
+- Warning: amber (`#f59e0b`)
+
+## Typography
+
+Override for readability:
+
+```css
+:root {
+  --vp-font-family-base: '"Noto Sans SC", "PingFang SC", "Microsoft YaHei", sans-serif';
+  --vp-font-family-mono: '"JetBrains Mono", "Fira Code", "Cascadia Code", monospace';
+  --vp-doc-line-height: 1.8;  /* looser than default */
+}
+```
+
+## Code Block Styling
+
+Custom code block header to show file names:
+
+```css
+.vp-code-group .tabs {
+  font-size: 0.85rem;
+  font-family: var(--vp-font-family-mono);
+}
+```
+
+## Sidebar
+
+Keep VitePress default sidebar. Only override:
+- Collapsed group indicator style
+- Active link highlight color
+
+## Dark Mode
+
+All custom styles MUST have dark mode equivalents. Test by toggling the theme.
+
+```css
+/* Light only */
+:root { /* ... */ }
+
+/* Dark only */
+html.dark { /* ... */ }
+```
+
+Never use `@media (prefers-color-scheme: dark)` — VitePress handles theme switching via `html.dark`.
+
+## Favicon & Logo
+
+- Place in `docs/public/`
+- Reference in `.vitepress/config.js` via `src` assets
+- Current: use a simple SVG icon (inline in config) as placeholder

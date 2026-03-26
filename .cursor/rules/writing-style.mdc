@@ -1,0 +1,67 @@
+---
+description: WebAPI Docs writing style guide — concise, direct, personality
+alwaysApply: true
+---
+
+# Writing Style Guide
+
+This is not MDN. Keep it crisp, direct, and alive.
+
+## Core Principles
+
+### Start with the punch line
+Never open with verbose preambles. Every section begins with a one-sentence definition or purpose — then code, then explanation.
+
+### Code first, words second
+Show the API call before explaining what it does. Readers scan code; text confirms.
+
+### Tone
+- Use **"你"** and **"我们"** instead of "用户" or "开发者"
+- Use active voice: "我们调用 `getUserMedia`" not "`getUserMedia` 方法可以被调用"
+- Inject personality — this is not a corporate manual
+
+### No fluff
+Cut every sentence that could be removed without losing meaning.
+- BAD: "在使用 WebRTC 进行点对点通信之前，我们首先需要了解..."
+- GOOD: "WebRTC 让浏览器直接和另一个浏览器通话，不需要服务器中转数据。"
+
+## Required Page Sections
+
+Every doc page must include:
+
+1. **概述** — One clear paragraph, no bullets, no headers
+2. **快速上手** — Minimal working example, < 20 lines
+3. **核心概念** — API/event/method breakdown with clear headings
+4. **实战案例** — End-to-end example, real use case
+5. **注意事项** — Gotchas, edge cases, browser quirks
+
+## Formatting Rules
+
+- Use `:::tip`, `:::warning`, `:::danger` callout boxes for caveats
+- Break long text into short paragraphs; prefer `##` headings over walls of text
+- Tables only for parameter/option reference tables
+- Keep code blocks short; > 50 lines = split into multiple blocks
+- Use `// =>` comments to show expected output instead of `console.log`
+- No lorem ipsum, no placeholder text, no "TODO" comments
+
+## Examples
+
+### BAD
+```
+WebRTC (Web Real-Time Communication) is a technology that allows
+real-time audio, video, and data communication between peers. It has
+been widely adopted in modern web applications...
+```
+
+### GOOD
+```
+WebRTC 让两个浏览器直接建立双向音视频和数据通道，无需服务器中转。
+```
+
+```js
+// 快速上手
+const pc = new RTCPeerConnection();
+pc.ontrack = (event) => {
+  videoEl.srcObject = event.streams[0];
+};
+```

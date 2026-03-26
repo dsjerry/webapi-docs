@@ -1,0 +1,91 @@
+---
+description: Content structure rules — mandatory page layout
+alwaysApply: true
+---
+
+# Content Structure Rules
+
+Every page on this site follows the same predictable structure. Readers should always know where to look.
+
+## Mandatory Page Layout
+
+Every doc page must use this order:
+
+```
+1. frontmatter (title, description, outline)
+2. 概述 (Overview)
+3. 快速上手 (Quick Start)
+4. 核心概念 (Core Concepts)
+5. API 详解 (API Reference)
+6. 实战案例 (Practical Example)
+7. 注意事项 (Gotchas)
+```
+
+## Frontmatter Requirements
+
+Every markdown file must include:
+
+```yaml
+---
+title: 页面标题
+description: 一句话描述页面内容（用于 SEO 和导航提示）
+outline: [2, 3]
+---
+```
+
+## 概述 Section
+
+- 1 paragraph maximum
+- No headings, no lists, no code blocks
+- Must clearly state: what it is, when to use it, why it exists
+
+## 快速上手 Section
+
+- Single self-contained code block, < 20 lines
+- No external dependencies beyond the browser's built-in APIs
+- Must actually run in a browser console or simple HTML file
+- Label it clearly: `<!-- 快速上手 -->` or `// 快速上手`
+
+## 核心概念 Section
+
+- Use `###` sub-headings for each concept
+- Each concept: 1-3 paragraphs + code snippet
+- Avoid repeating what's in 快速上手; build on it
+
+## API 详解 Section
+
+- Use tables for method/event/option parameters only
+- Format: `Name | Type | Default | Description`
+- Sort parameters by importance, not alphabetically
+- Mark deprecated items with `:::warning [已废弃]` callout
+
+## 实战案例 Section
+
+- Real, end-to-end example
+- Must include: scenario description, full code, expected behavior
+- If the example requires a server or second peer, clearly state so
+- Use `:::tip` to note any setup requirements
+
+## 注意事项 Section
+
+- Bullet points, not paragraphs
+- Sort by severity: `:::danger` first, then `:::warning`, then `:::tip`
+- Include browser compatibility callout using `:::tip` at the top if relevant
+- Common gotchas: security restrictions, API changes, edge cases
+
+## Linking
+
+- Cross-links between pages use standard markdown links: `[RTCPeerConnection](/webrtc/peer-connection)`
+- Prev/Next navigation: links to sibling pages at bottom of each page using VitePress `< prev/next >` or manual links
+- No broken links — verify internal links before finishing a page
+
+## Browser Compatibility
+
+Place a compatibility callout at the top of each page under 概述:
+
+```
+:::tip 浏览器支持
+WebRTC: Chrome 56+, Firefox 44+, Safari 11+, Edge 79+
+Web Worker: 所有现代浏览器
+:::
+```

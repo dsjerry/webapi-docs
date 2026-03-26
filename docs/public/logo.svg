@@ -1,0 +1,50 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" fill="none">
+  <defs>
+    <linearGradient id="logo-bg" x1="0" y1="0" x2="128" y2="128" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#7c8aff"/>
+      <stop offset="100%" stop-color="#535bf2"/>
+    </linearGradient>
+    <linearGradient id="logo-accent" x1="0" y1="0" x2="128" y2="0" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#7c8aff"/>
+      <stop offset="100%" stop-color="#a5b0fd"/>
+    </linearGradient>
+    <filter id="logo-glow" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="3" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+
+  <!-- Background rounded square -->
+  <rect width="128" height="128" rx="28" fill="url(#logo-bg)"/>
+
+  <!-- Left bracket "<" -->
+  <polyline
+    points="40,82 22,64 40,46"
+    stroke="white" stroke-width="10" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+
+  <!-- Right bracket ">" -->
+  <polyline
+    points="88,82 106,64 88,46"
+    stroke="white" stroke-width="10" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+
+  <!-- Center W mark (stylized network nodes) -->
+  <!-- Left diagonal of W -->
+  <line x1="52" y1="50" x2="64" y2="82" stroke="url(#logo-accent)" stroke-width="8" stroke-linecap="round"/>
+  <!-- Middle diagonal of W -->
+  <line x1="64" y1="82" x2="76" y2="50" stroke="url(#logo-accent)" stroke-width="8" stroke-linecap="round"/>
+  <!-- Right diagonal of W -->
+  <line x1="76" y1="50" x2="88" y2="82" stroke="url(#logo-accent)" stroke-width="8" stroke-linecap="round"/>
+
+  <!-- Top nodes (connection points) -->
+  <circle cx="52" cy="50" r="7" fill="white" filter="url(#logo-glow)"/>
+  <circle cx="76" cy="50" r="7" fill="white" filter="url(#logo-glow)"/>
+  <!-- Bottom node -->
+  <circle cx="64" cy="82" r="7" fill="white" filter="url(#logo-glow)"/>
+
+  <!-- Accent dots at bracket tips -->
+  <circle cx="22" cy="64" r="5" fill="rgba(255,255,255,0.7)"/>
+  <circle cx="106" cy="64" r="5" fill="rgba(255,255,255,0.7)"/>
+</svg>

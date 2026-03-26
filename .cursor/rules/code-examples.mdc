@@ -1,0 +1,85 @@
+---
+description: Code example standards — modern ES, consistent style
+alwaysApply: true
+---
+
+# Code Example Standards
+
+High-quality, consistent code examples are the heart of this site.
+
+## Syntax & Style
+
+- Use **ES modules** (`<script type="module">`) for browser examples
+- Prefer `const` / `let` over `var`
+- Use arrow functions for callbacks
+- Use `async`/`await` over raw Promise chains
+- No TypeScript in browser examples (keep it accessible)
+- TypeScript allowed in Node.js / build-step examples with clear note
+
+## Code Block Headers
+
+Every code block must have a language tag and a descriptive header comment:
+
+~~~md
+```js
+// 快速上手：建立 RTCPeerConnection
+const pc = new RTCPeerConnection();
+```
+~~~
+
+Supported header prefixes:
+- `// 快速上手：` — minimal working example
+- `// 基础用法：` — basic usage
+- `// 高级用法：` — advanced usage
+- `<!-- -->` — for HTML examples
+- `# ` — for shell examples
+
+## Output Comments
+
+Use `// =>` to show expected output. Do NOT use `console.log`.
+
+```js
+const arr = [1, 2, 3];
+const doubled = arr.map(n => n * 2);
+// => [2, 4, 6]
+```
+
+## Error Handling
+
+Show how errors happen and how to handle them:
+
+```js
+try {
+  const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+} catch (err) {
+  // 摄像头权限被拒绝或设备不可用
+  console.error('无法获取媒体流:', err.message);
+}
+```
+
+## File Separation
+
+For multi-file examples (e.g., main thread + worker), clearly label each file:
+
+```js
+// === main.js ===
+// 主线程
+self.onmessage = (e) => console.log(e.data);
+// => Worker 说: 你好
+```
+
+```js
+// === worker.js ===
+self.postMessage('你好');
+self.close();
+```
+
+## Anti-Patterns to Avoid
+
+- **No** `var` declarations
+- **No** `new XMLHttpRequest()` — use `fetch` instead
+- **No** `Function.prototype.bind` — use arrow functions
+- **No** callback-hell indentation — use `async/await`
+- **No** long utility functions in examples — inline only
+- **No** output from `console.log` without `// =>` annotation
+- **No** copy-paste walls — split long examples into logical steps

@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" fill="none">
+  <defs>
+    <linearGradient id="favicon-bg" x1="0" y1="0" x2="32" y2="32" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#7c8aff"/>
+      <stop offset="100%" stop-color="#535bf2"/>
+    </linearGradient>
+  </defs>
+  <rect width="32" height="32" rx="7" fill="url(#favicon-bg)"/>
+  <polyline points="10,20 5,16 10,12" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+  <polyline points="22,20 27,16 22,12" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+  <line x1="13" y1="12" x2="16" y2="20" stroke="#a5b0fd" stroke-width="2" stroke-linecap="round"/>
+  <line x1="16" y1="20" x2="19" y2="12" stroke="#a5b0fd" stroke-width="2" stroke-linecap="round"/>
+</svg>
