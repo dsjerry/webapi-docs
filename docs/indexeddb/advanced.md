@@ -225,6 +225,85 @@ request.onerror = (event) => {
 | 查询用索引不用全表扫描 | `store.getAll()` 会遍历全表，索引查询 O(log n) |
 | 及时关闭事务 | 长时间开启的事务会阻塞 schema 升级 |
 
+## 存储配额管理
+
+浏览器给每个源（origin）分配一块共享存储池（IndexedDB / Cache / FileSystem 共用），超额会触发 `QuotaExceededError`。**默认存储是"尽力而为"——浏览器空间不足时可能直接清掉你的数据**。
+
+### 查看当前用量
+
+```js
+const { usage, quota } = await navigator.storage.estimate();
+// => { usage: 12_345_678, quota: 10_737_418_240 }
+
+const percent = (usage / quota * 100).toFixed(2);
+console.log(`已用 ${(usage / 1e6).toFixed(1)}MB / ${(quota / 1e9).toFixed(1)}GB (${percent}%)`);
+```
+
+| 字段 | 说明 |
+|------|------|
+| `usage` | 当前已用字节（所有 storage 加总） |
+| `quota` | 浏览器分配的总配额（通常是磁盘剩余空间的 60%） |
+
+### 申请持久化存储
+
+默认数据可能被浏览器悄悄清掉。把它升级为 **persistent**，用户主动清理之前永远保留：
+
+```js
+// 必须在用户交互后调用
+const granted = await navigator.storage.persist();
+// => true / false（部分浏览器需要"被收藏"或"PWA 安装"才会授予）
+
+// 检查当前是否已持久化
+const isPersisted = await navigator.storage.persisted();
+```
+
+| 浏览器 | 持久化策略 |
+|--------|-----------|
+| Chrome | 自动判断（被频繁访问 / 安装为 PWA / 已通知权限） |
+| Firefox | 弹窗询问用户 |
+| Safari | iOS 7 天不访问会清空，配额很小 |
+
+:::warning Safari 限制
+iOS Safari 的 IndexedDB 配额只有约 1GB（设备总空间的 1/4），且 7 天未访问的站点数据可能被清理。重要数据建议引导用户"添加到主屏幕"。
+:::
+
+## 三库对比：原生 / idb / Dexie
+
+原生 API 写起来啰嗦，社区有两个主流封装：
+
+| | 原生 IndexedDB | [`idb`](https://github.com/jakearchibald/idb) | [`Dexie.js`](https://dexie.org/) |
+|--|------|------|------|
+| 体积 | 0KB | ~3KB gzip | ~25KB gzip |
+| API 风格 | 事件 + Request | 全 Promise（薄封装） | 全 Promise + 链式 |
+| 学习成本 | 高 | 低（API 几乎一致） | 中（自有 DSL） |
+| 查询能力 | 手写游标 | 手写游标 | 链式 `.where().above().toArray()` |
+| TypeScript | 内置 | 内置 | 内置 |
+| 适用场景 | 极简项目 / 想完全控制 | 想要 Promise 的薄封装 | 大型应用 / 复杂查询 |
+
+```js
+// === 原生 ===
+const tx = db.transaction('users', 'readonly');
+const req = tx.objectStore('users').get(1);
+req.onsuccess = () => console.log(req.result);
+
+// === idb ===
+import { openDB } from 'idb';
+const db = await openDB('MyAppDB', 1);
+const user = await db.get('users', 1);
+
+// === Dexie ===
+import Dexie from 'dexie';
+const db = new Dexie('MyAppDB');
+db.version(1).stores({ users: '&id, email, age' });
+const adults = await db.users.where('age').above(18).toArray();
+```
+
+**怎么选**：
+
+- **试验型代码 / 教学**：用原生，理解机制
+- **业务项目，少量查询**：用 `idb`，几乎零迁移成本
+- **大型应用，复杂条件查询**：用 `Dexie`，省下大量手写游标的时间
+
 ## 注意事项
 
 - **`IDBKeyRange.only()` 只能匹配唯一值**：如果索引不唯一，`get()` 只返回第一条

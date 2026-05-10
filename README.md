@@ -36,6 +36,36 @@ npm run docs:preview
 
 把耗时计算从主线程剥离。保持 UI 流畅，后台跑复杂逻辑。
 
+### IndexedDB
+
+浏览器内置的 NoSQL 数据库。存大量结构化数据，支持索引和事务，离线可用。
+
+### Web Audio API
+
+浏览器音频处理引擎。合成、滤波、混音、可视化，搭一条节点图就能跑。
+
+### Web Crypto API
+
+浏览器原生加密。哈希、AES、RSA、签名验签，性能超过任何 JS 加密库。
+
+### Server-Sent Events
+
+服务端单向推送的 HTTP 长连接。简单、自动重连，AI 流式回复的标配。
+
+### WebAuthn / Passkeys
+
+浏览器原生无密码登录。公私钥 + 生物识别，彻底替代密码。
+
+### File System Access API
+
+让浏览器直接读写本地文件。VS Code Web、Photopea 都靠它。
+
+## 实用指南
+
+- **DevTools 调试技巧** — 各 API 在 Chrome / Firefox 中的高效调试方法
+- **性能基准** — 各方案的真实 ms 数据，选型时用得上的硬指标
+- **TypeScript 类型最佳实践** — 直接复制就能用的最小封装
+
 ## 添加新模块
 
 在 `docs/` 下创建对应目录（如 `docs/websocket/`），在 `.vitepress/config.js` 的 `sidebar` 中注册路由即可。

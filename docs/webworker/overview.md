@@ -75,6 +75,55 @@ Worker 线程和主线程是**完全隔离的上下文**（除了通过 `postMes
 | Service Worker | `navigator.serviceWorker.register()` | 代理网络请求，可离线缓存 |
 | Worklet | `CSS.paintWorklet.addModule()` | 渲染阶段自定义绘制 |
 
+### OffscreenCanvas
+
+Worker 里没有 DOM，但能用 **`OffscreenCanvas`** 画图——把 `<canvas>` 控制权转交到 Worker，渲染逻辑彻底脱离主线程：
+
+```js
+// === main.js ===
+const canvas = document.querySelector('canvas');
+const offscreen = canvas.transferControlToOffscreen();
+const worker = new Worker('./paint.js');
+worker.postMessage({ canvas: offscreen }, [offscreen]);  // 必须 transfer
+```
+
+```js
+// === paint.js ===
+self.onmessage = ({ data: { canvas } }) => {
+  const ctx = canvas.getContext('2d');
+  // 在 Worker 里绘图，主线程一点都不卡
+  setInterval(() => {
+    ctx.fillStyle = `hsl(${Date.now() / 10 % 360}, 70%, 50%)`;
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+  }, 16);
+};
+```
+
+适合复杂图表、游戏渲染、离屏图像处理。WebGL / WebGPU 也都能在 OffscreenCanvas 上跑。
+
+### Comlink：把 postMessage 变成函数调用
+
+原生 `postMessage` 写多了很啰嗦。**Comlink** 是 Google 出的封装库（2KB），把 Worker 暴露成"远程对象"，用法就像调用普通函数：
+
+```js
+// === main.js ===
+import * as Comlink from 'comlink';
+const api = Comlink.wrap(new Worker('./worker.js'));
+const sum = await api.add(1, 2);
+// => 3
+```
+
+```js
+// === worker.js ===
+import * as Comlink from 'comlink';
+Comlink.expose({
+  add: (a, b) => a + b,
+  heavyTask: async (data) => { /* ... */ },
+});
+```
+
+写法直观，代码量减半。社区主流方案，写复杂多 Worker 应用强烈推荐。
+
 ## 注意事项
 
 - **Worker 代码必须同源**：`new Worker('./worker.js')` 里的路径必须和主页面同源

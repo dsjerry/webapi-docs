@@ -203,40 +203,84 @@ C_MAJOR.forEach((freq, i) => {
 
 ## AudioWorklet（自定义音频处理）
 
-AudioWorklet 允许用 JavaScript 代码做自定义 DSP（运行在工作线程，不阻塞主线程）：
+需要做内置节点搞不定的 DSP（比特压缩、声码器、自制滤波器）？用 **AudioWorklet**。它是音频线程上跑的 JS，每 128 个采样调用一次 `process()`，绝不阻塞主线程。
+
+| | ScriptProcessorNode（已废弃） | AudioWorklet |
+|--|------|------|
+| 运行线程 | 主线程 | 音频专用线程 |
+| 卡 UI | 会 | 不会 |
+| 延迟 | 高（缓冲区 256-16384） | 低（固定 128 采样） |
+| API 风格 | 事件 | class + Promise |
+| 状态 | 已弃用 | 推荐 |
+
+### 注册处理器
 
 ```js
-// 注册处理器（在单独的文件中）
-// processor.js
+// === processor.js ===
+// 自定义"位深压缩器"音效（lo-fi 颗粒感）
 class BitcrusherProcessor extends AudioWorkletProcessor {
-  constructor() {
-    super();
-    this.quantizationSteps = 16;
+  // 声明可调参数（可像 GainNode 一样自动化）
+  static get parameterDescriptors() {
+    return [{ name: 'bits', defaultValue: 8, minValue: 1, maxValue: 16 }];
   }
-  process(inputs, outputs) {
+
+  process(inputs, outputs, parameters) {
     const input = inputs[0];
     const output = outputs[0];
+    const bits = parameters.bits[0];
+    const step = 2 / Math.pow(2, bits);
+
     for (let ch = 0; ch < input.length; ch++) {
       for (let i = 0; i < input[ch].length; i++) {
-        const step = 2 / this.quantizationSteps;
         output[ch][i] = step * Math.floor(input[ch][i] / step + 0.5);
       }
     }
-    return true;
+    return true;  // 返回 false 时节点会被自动回收
   }
 }
 registerProcessor('bitcrusher', BitcrusherProcessor);
 ```
 
+### 主线程使用
+
 ```js
-// 主线程加载
+// 高级用法：加载 + 调参
 await ctx.audioWorklet.addModule('/processor.js');
+
 const crusher = new AudioWorkletNode(ctx, 'bitcrusher');
+
+// 像 GainNode 一样平滑调参
+crusher.parameters.get('bits').setValueAtTime(4, ctx.currentTime);
+
+source.connect(crusher).connect(ctx.destination);
 ```
 
-:::tip AudioWorklet vs ScriptProcessorNode
-`ScriptProcessorNode` 已废弃（运行在主线程，会卡 UI）。新项目必须用 `AudioWorklet`。
-:::
+### 双向消息
+
+Worklet 内外可以互发消息（场景：上报 RMS 音量、接收 UI 控制指令）：
+
+```js
+// === processor.js ===
+class MeterProcessor extends AudioWorkletProcessor {
+  process(inputs) {
+    const ch = inputs[0][0];
+    if (!ch) return true;
+    let sum = 0;
+    for (let i = 0; i < ch.length; i++) sum += ch[i] * ch[i];
+    this.port.postMessage({ rms: Math.sqrt(sum / ch.length) });
+    return true;
+  }
+}
+registerProcessor('meter', MeterProcessor);
+```
+
+```js
+// === main.js ===
+const meter = new AudioWorkletNode(ctx, 'meter');
+meter.port.onmessage = ({ data }) => {
+  // data.rms ∈ [0, 1]，用来画音量条
+};
+```
 
 ## 注意事项
 

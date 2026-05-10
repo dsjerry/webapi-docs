@@ -27,6 +27,32 @@ Web Audio API 基于"音频节点图"（Audio Node Graph）工作：将音频信
 | 多轨道混音 | 难实现 | 自然支持（节点图连接） |
 | 适用场景 | 背景音乐、视频配音 | 音效处理、音乐制作、语音处理 |
 
+## 快速上手
+
+<!-- 快速上手：创建一个可听见的声音 -->
+```js
+// 必须放在用户交互事件中（点击按钮触发）
+button.onclick = () => {
+  const ctx = new AudioContext();
+
+  // 创建振荡器（方形波，440Hz = A4 音）
+  const osc = ctx.createOscillator();
+  osc.type = 'square';
+  osc.frequency.setValueAtTime(440, ctx.currentTime);
+
+  // 创建增益节点（控制音量）
+  const gain = ctx.createGain();
+  gain.gain.setValueAtTime(0.3, ctx.currentTime); // 30% 音量
+
+  // 连接并播放
+  osc.connect(gain).connect(ctx.destination);
+  osc.start();
+
+  // 1 秒后自动停止
+  osc.stop(ctx.currentTime + 1);
+};
+```
+
 ## 核心概念
 
 ### AudioContext
@@ -73,32 +99,6 @@ osc.start();  // 开始播放
 gain.gain.setValueAtTime(0, ctx.currentTime);  // 静音
 ```
 
-## 快速上手
-
-<!-- 快速上手：创建一个可听见的声音 -->
-```js
-// 必须放在用户交互事件中（点击按钮触发）
-button.onclick = () => {
-  const ctx = new AudioContext();
-
-  // 创建振荡器（方形波，440Hz = A4 音）
-  const osc = ctx.createOscillator();
-  osc.type = 'square';
-  osc.frequency.setValueAtTime(440, ctx.currentTime);
-
-  // 创建增益节点（控制音量）
-  const gain = ctx.createGain();
-  gain.gain.setValueAtTime(0.3, ctx.currentTime); // 30% 音量
-
-  // 连接并播放
-  osc.connect(gain).connect(ctx.destination);
-  osc.start();
-
-  // 1 秒后自动停止
-  osc.stop(ctx.currentTime + 1);
-};
-```
-
 ## 常用节点一览
 
 | 节点 | 用途 |
@@ -110,6 +110,7 @@ button.onclick = () => {
 | `DelayNode` | 延迟效果 |
 | `ConvolverNode` | 卷积混响 |
 | `AnalyserNode` | 频谱/波形分析（可视化用） |
+| `AudioWorkletNode` | 自定义采样级处理（替代废弃的 ScriptProcessorNode） |
 | `MediaStreamSource` | 麦克风输入 |
 | `MediaRecorder` | 录制音频到文件 |
 

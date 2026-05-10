@@ -43,6 +43,7 @@ WebRTC（Web Real-Time Communication）让两个浏览器直接建立双向音�
 | API | 职责 |
 |-----|------|
 | `getUserMedia` | 采集本地摄像头/麦克风，产生 MediaStream |
+| `getDisplayMedia` | 采集屏幕/窗口/Tab 内容，用于屏幕共享 |
 | `RTCPeerConnection` | 建立、管理、关闭 P2P 连接 |
 | `RTCDataChannel` | 在连接上开一条任意数据通道 |
 

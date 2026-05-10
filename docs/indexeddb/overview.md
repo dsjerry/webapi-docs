@@ -28,6 +28,37 @@ Chrome 4+ · Firefox 4+ · Safari 8+ · Edge 12+
 | 事务支持 | 无 | 支持原子操作 |
 | 适用场景 | 小配置、用户偏好 | 大量业务数据、离线存储 |
 
+## 快速上手
+
+<!-- 快速上手：增删改查全流程 -->
+```js
+// 打开数据库
+const openDB = (name, version) =>
+  new Promise((resolve, reject) => {
+    const req = indexedDB.open(name, version);
+    req.onupgradeneeded = (e) => {
+      const db = e.target.result;
+      if (!db.objectStoreNames.contains('notes')) {
+        db.createObjectStore('notes', { keyPath: 'id', autoIncrement: true });
+      }
+    };
+    req.onsuccess = (e) => resolve(e.target.result);
+    req.onerror = () => reject(req.error);
+  });
+
+const db = await openDB('DemoDB', 1);
+
+// 写
+const tx = db.transaction('notes', 'readwrite');
+tx.objectStore('notes').add({ title: 'Hello', content: 'World' });
+
+// 读（按 key）
+const tx2 = db.transaction('notes', 'readonly');
+const req = tx2.objectStore('notes').get(1);
+req.onsuccess = () => req.result;
+// => { id: 1, title: 'Hello', content: 'World' }
+```
+
 ## 核心概念
 
 IndexedDB 的数据模型分为四层：
@@ -71,41 +102,9 @@ const store = tx.objectStore('users');
 store.add({ id: 1, name: 'Alice', email: 'alice@example.com' });
 ```
 
-## 快速上手
-
-<!-- 快速上手：增删改查全流程 -->
-```js
-// 打开数据库
-const openDB = (name, version) =>
-  new Promise((resolve, reject) => {
-    const req = indexedDB.open(name, version);
-    req.onupgradeneeded = (e) => {
-      const db = e.target.result;
-      if (!db.objectStoreNames.contains('notes')) {
-        db.createObjectStore('notes', { keyPath: 'id', autoIncrement: true });
-      }
-    };
-    req.onsuccess = (e) => resolve(e.target.result);
-    req.onerror = () => reject(req.error);
-  });
-
-(async () => {
-  const db = await openDB('DemoDB', 1);
-
-  // 写
-  const tx = db.transaction('notes', 'readwrite');
-  await tx.objectStore('notes').add({ title: 'Hello', content: 'World' });
-
-  // 读（按 key）
-  const tx2 = db.transaction('notes', 'readonly');
-  const req = tx2.objectStore('notes').get(1);
-  req.onsuccess = () => console.log(req.result); // { id: 1, title: 'Hello', ... }
-})();
-```
-
 ## 注意事项
 
-- **API 风格旧**：IndexedDB 原生 API 用事件和请求对象，代码嵌套深；实际项目中建议用 `idb` 或 `Dexie.js` 封装库
+- **API 风格旧**：IndexedDB 原生 API 用事件和请求对象，代码嵌套深；生产项目建议选 `idb` 或 `Dexie.js`，详见[进阶用法的三库对比](./advanced#三库对比-原生-idb-dexie)
 - **版本升级是同步的**：`onupgradeneeded` 回调里做 schema 变更，必须同步完成，不能异步等待
 - **事务不能跨数据库**：一个事务只能操作同一个数据库里的对象仓库
 - **键类型**：主键（keyPath）只能是字符串、日期、数字或 ArrayBuffer，不能是对象

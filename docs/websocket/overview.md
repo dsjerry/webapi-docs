@@ -41,7 +41,8 @@ ws.onopen = () => {
 };
 
 ws.onmessage = (e) => {
-  console.log('收到消息:', e.data);  // 收到消息: 你好，服务器
+  console.log('收到消息:', e.data);
+  // => 收到消息: 你好，服务器
 };
 
 ws.onerror = (e) => {
@@ -106,9 +107,29 @@ TCP 连接本身不感知对端是否存活（比如拔网线时 TCP 不会立�
 浏览器收到 `0x9`（ping）帧会自动回复 `0xA`（pong），你不需要手动处理。
 :::
 
+## 何时选 WebSocket：vs SSE vs 轮询
+
+实时通信不是只有 WebSocket 一条路。多数业务场景下，更轻量的方案就够用：
+
+| | 轮询 (Polling) | SSE (EventSource) | WebSocket |
+|--|------|------|------|
+| 通信方向 | 客户端 → 服务端 | 服务端 → 客户端（单向） | 双向 |
+| 协议 | HTTP | HTTP（流式） | TCP（升级而来） |
+| 服务端实现 | 任何 HTTP 服务 | Node / Python 都有现成库 | 需 WS 库（ws / socket.io） |
+| 自动重连 | 手动 | **浏览器自动** | 手动 |
+| 二进制 | JSON 串 | 仅文本（UTF-8） | 文本 + 二进制 |
+| 代理 / CDN 兼容 | 完美 | 完美（HTTP 流） | 部分 CDN 不支持 |
+| 适合场景 | 状态轮询、低频更新 | 推送通知、股票行情、AI 流式回复 | 聊天、协作、游戏、实时双向 |
+
+**经验法则**：
+
+- 只是"服务器主动推消息给浏览器" → **SSE**（[ChatGPT 流式回复就是用的 SSE](https://platform.openai.com/docs/api-reference/streaming)）
+- 浏览器和服务器要**双向频繁**通信 → **WebSocket**
+- 数据更新很慢（每分钟一次以下） → **轮询**就够，简单可靠
+
 ## 注意事项
 
 - **必须是 HTTPS/WSS**：现代浏览器对非安全上下文的 WebSocket 有严格限制（除 `localhost` 外）
 - **服务端也需要支持**：WebSocket 是协议，需要服务端（Node.js、Go、Python 等）配合
-- **不是所有场景都需要它**：如果只需要"客户端轮询服务端"，用 Server-Sent Events（SSE）更简单
+- **不是所有场景都需要它**：服务端单向推送时，用 SSE 更简单
 - **断线不自愈**：连接断开后浏览器不会自动重连，需要自己写重连逻辑

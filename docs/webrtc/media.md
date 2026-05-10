@@ -89,6 +89,43 @@ navigator.mediaDevices.ondevicechange = async () => {
 };
 ```
 
+### 屏幕共享 getDisplayMedia
+
+要采集**屏幕**而不是摄像头，用 `getDisplayMedia`。API 形态和 `getUserMedia` 几乎一样，但浏览器会弹出"选择共享内容"系统级对话框（整屏 / 窗口 / Tab）：
+
+```js
+// 基础用法：屏幕共享
+const screen = await navigator.mediaDevices.getDisplayMedia({
+  video: { frameRate: { ideal: 30 } },
+  audio: true,    // 部分浏览器支持采集 Tab 音频（Chrome）
+});
+
+screenVideo.srcObject = screen;
+
+// 用户点"停止共享"系统按钮时，track 会自动 ended
+screen.getVideoTracks()[0].onended = () => {
+  console.log('用户结束了屏幕共享');
+};
+```
+
+| 选项 | 说明 |
+|------|------|
+| `video.displaySurface` | 偏好的源类型：`'monitor'` / `'window'` / `'browser'` |
+| `video.cursor` | `'always'` / `'motion'` / `'never'`（是否显示鼠标） |
+| `audio` | 是否同时采集音频（Chromium 仅 Tab 共享时支持） |
+| `selfBrowserSurface` | `'include'` / `'exclude'`（是否允许选当前 Tab，防套娃） |
+
+:::warning 触发条件
+`getDisplayMedia` **必须由用户手势触发**（点击事件回调里调用），否则直接抛 `InvalidStateError`。Safari 不支持音频采集。
+:::
+
+把屏幕流加进 `RTCPeerConnection` 就能做远程协助、在线会议屏幕分享：
+
+```js
+const screen = await navigator.mediaDevices.getDisplayMedia({ video: true });
+screen.getTracks().forEach(track => pc.addTrack(track, screen));
+```
+
 ## API 详解
 
 ### 约束条件（Constraints）

@@ -40,9 +40,33 @@ features:
     link: /webaudio/
     linkText: 进入 Web Audio API
 
-  - icon: ⏳
-    title: 更多模块
-    details: 持续更新中。Server-Sent Events、File System Access 等核心 API 都会覆盖。
-    link: /
-    linkText: 敬请期待
+  - icon: 🔐
+    title: Web Crypto API
+    details: 浏览器原生加密。哈希、AES、RSA、签名验签，全部由原生代码实现，比第三方库更快更安全。
+    link: /webcrypto/
+    linkText: 进入 Web Crypto API
+
+  - icon: 📡
+    title: Server-Sent Events
+    details: 服务端单向推送。比 WebSocket 简单，自带断线重连，ChatGPT 流式回复就用它。
+    link: /sse/
+    linkText: 进入 SSE
+
+  - icon: 🔑
+    title: WebAuthn / Passkeys
+    details: 浏览器原生无密码登录。基于公私钥 + 生物识别，彻底替代密码。
+    link: /webauthn/
+    linkText: 进入 WebAuthn
+
+  - icon: 📁
+    title: File System Access
+    details: 浏览器真正读写本地文件。打开 → 修改 → 保存，体验和桌面应用一致。
+    link: /file-system/
+    linkText: 进入 File System
+
+  - icon: 🛠️
+    title: 实用指南
+    details: DevTools 调试技巧、各 API 性能基准、TypeScript 类型最佳实践。
+    link: /guides/debugging
+    linkText: 查看指南
 ---

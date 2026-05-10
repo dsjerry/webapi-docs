@@ -207,9 +207,26 @@ self.onmessage = (e) => {
 
 注意：斐波那契本身只用了 3ms（矩阵快速幂），而生成 20 万条随机数组 + 排序在 Worker 里也只用了约 80ms——全程主线程零感知，UI 流畅无比。
 
+## 常见排错
+
+| 现象 | 原因 |
+|------|------|
+| `new Worker('./worker.js')` 报 `404` 或 MIME 错 | Vite/Webpack 不会自动复制 worker 文件，要用 `new Worker(new URL('./worker.js', import.meta.url))` |
+| Worker 里 `import` 报错 | 创建时要传 `{ type: 'module' }`：`new Worker(url, { type: 'module' })` |
+| 主线程发 `Uint8Array` 给 Worker 后，自己手里的变成 0 字节 | 用了 transfer 方式，数据已经"转移"。要拷贝就别传 `[buffer]` 第二参数 |
+| Worker 里 `fetch()` 失败 CORS | Worker 的 origin 跟主页一样，但部分 CORS header 在 Worker 内行为不同；加 `credentials: 'omit'` 试 |
+| Chrome DevTools 看不到 Worker 的 console.log | DevTools → ⋮ 菜单 → "More tools" → "Sources" 标签页里选对应的 worker scope |
+| `worker.terminate()` 后内存没释放 | Worker 引用没置为 `null`；闭包里还持有 worker 变量 |
+
 ## 注意事项
 
 - **Transferable 是关键**：把 `arr.buffer` 作为第二个参数传给 `postMessage`，数据被"转移"而不是"克隆"，主线程立即释放那块内存，不会卡顿
 - **fibonacci 用矩阵快速幂**而不是递归：递归版本 O(2^n)，矩阵快速幂 O(log n)，第 1000 项也能瞬间算完
 - **Worker 里没有 DOM**：不要试图在 Worker 里操作 `document`；所有结果必须 `postMessage` 回主线程
 - **Worker 错误不会崩主线程**：Worker 报错后可以用 `worker.onerror` 捕获，不影响主线程运行
+
+## 延伸阅读
+
+- [IndexedDB 基础用法](/indexeddb/basic) — 在 Worker 里读写 IndexedDB，进一步把数据访问搬离主线程
+- [Web Worker：核心概念](/webworker/overview#offscreencanvas) — 把 Canvas 渲染也丢进 Worker
+- [Web Crypto：基础用法](/webcrypto/basic) — 把哈希计算等 CPU 密集操作放在 Worker 里

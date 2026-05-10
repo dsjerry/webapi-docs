@@ -250,9 +250,26 @@ wss.on('connection', (ws) => {
 });
 ```
 
+## 常见排错
+
+| 现象 | 原因 |
+|------|------|
+| `ontrack` 触发但视频黑屏 | 用了 `video.src` 而不是 `video.srcObject`；或 autoplay 被浏览器阻塞，加 `muted` 属性 |
+| `connectionState` 一直 `connecting` 不进 `connected` | 没配 `iceServers` 或 STUN 不可达；NAT 类型对称网络需要 TURN |
+| `setRemoteDescription` 抛 `InvalidStateError` | offer/answer 顺序错了，或同一端调了两次 `setLocalDescription` |
+| 远端有声无图 | 编码协商失败，检查 `getStats()` 里的 `bytesReceived`；或对方没 `addTrack` 视频 |
+| 移动端切换前后摄像头卡顿 | `addTrack` 后改变设备需要 `replaceTrack`，不能 `removeTrack`+`addTrack` |
+| Chrome 控制台报 `Permissions policy violation` | 在 iframe 里用 WebRTC，父页要加 `allow="camera; microphone"` |
+
 ## 注意事项
 
 - **HTTPS**：除 localhost 外必须 HTTPS，可以借助 ngrok 或 Cloudflare Tunnel 暴露本地服务
 - **STUN 服务器**：`stun.l.google.com:19302` 是 Google 公共 STUN，仅用于演示；生产环境建议自建或购买 TURN 服务
 - **TURN 中继**：在严格网络环境下（企业网、对称型 NAT），STUN 不够用，必须配 TURN 服务器，否则连接 `failed`
 - **回音问题**：本示例中本地视频加了 `muted`，远端音频没加——如果仍有回音，检查系统声卡设置或使用耳机
+
+## 延伸阅读
+
+- [WebSocket 概述](/websocket/overview) — 信令服务器最常用 WebSocket 来交换 SDP / ICE
+- [Web Audio：实战音频可视化](/webaudio/practical) — 把对端音频接到 AnalyserNode 做声纹波形
+- [Web Crypto：进阶用法](/webcrypto/advanced) — 给 DataChannel 内容加端到端加密

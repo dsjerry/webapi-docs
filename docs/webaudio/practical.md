@@ -429,9 +429,26 @@ source.connect(lowShelf).connect(midPeak).connect(highShelf).connect(gainNode);
 npx serve .
 ```
 
+## 常见排错
+
+| 现象 | 原因 |
+|------|------|
+| iOS Safari 没声音 | `AudioContext` 默认 `suspended`，必须在用户点击事件里 `await ctx.resume()` |
+| 频谱可视化空白 | 音源没接到 `AnalyserNode`，或 `requestAnimationFrame` 没启动 |
+| `decodeAudioData` 抛 `EncodingError` | 浏览器不支持该格式（如 iOS 不支持 OGG）；用 `<audio>` 试试能否播放定位 |
+| 同一个 `AudioBufferSourceNode` 调 `start()` 两次报错 | source 节点是一次性的，每次播放都要重新 `createBufferSource()` |
+| 反复创建 AudioContext 后报 `OOM` | 浏览器同时只允许有限个 AudioContext，记得 `ctx.close()` 释放 |
+| 声音卡顿 / 爆音 | 节点链太长，或在主线程做了重计算；DSP 移到 `AudioWorklet` |
+
 ## 注意事项
 
 - **选择本地音频文件**：点击"选择本地音频文件"按钮，选择 MP3、WAV、OGG 等格式的音频文件
 - **Canvas 高清屏适配**：`canvas.width` 使用 `devicePixelRatio` 乘以实际像素，保证 Retina 屏幕清晰
 - **播放结束后自动停止**：通过 `source.onended` 事件检测播放结束，更新 UI 状态
 - **FFT 大小影响分辨率**：`fftSize = 256` 产生 128 个频段。如需更细腻的可视化可改为 2048（产生 1024 个频段，但性能开销更大）
+
+## 延伸阅读
+
+- [Web Audio：进阶用法 — AudioWorklet](/webaudio/advanced#audioworklet-自定义音频处理) — 自定义 DSP，把信号处理移到音频线程
+- [WebRTC：媒体流处理](/webrtc/media) — 把麦克风/远端音频接进 AudioContext 做实时处理
+- [Web Worker：核心概念](/webworker/overview#offscreencanvas) — 用 OffscreenCanvas 把可视化绘制也搬到 Worker

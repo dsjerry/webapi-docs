@@ -399,9 +399,26 @@ node server.js
 
 在另一个浏览器标签页（或另一台同局域网设备）打开 `index.html`，填入**相同的房间号**，即可开始实时聊天。
 
+## 常见排错
+
+| 现象 | 原因 |
+|------|------|
+| 连接立即关闭，code `1006` | 握手失败：CORS 拦截、反向代理超时、URL 路径错 |
+| `wss://` 一直无法连接 | 自签名证书在浏览器里没被信任；Cloudflare 等中间层未开启 WebSocket 透传 |
+| Nginx 代理后断流 | 没配 `proxy_read_timeout` 和 `Upgrade`/`Connection` 头 |
+| `send()` 调用没报错但对方收不到 | 在 `onopen` 之前发了消息（静默丢弃）；用 `readyState === OPEN` 判断 |
+| 切到移动网络后连接 5-10 秒无反应 | TCP 黑洞，本地 OS 没察觉断开；必须靠应用层心跳 + 超时检测 |
+| 大量小消息延迟很高 | 服务端启用了 Nagle 算法，要 `socket.setNoDelay(true)` |
+
 ## 注意事项
 
 - **跨设备访问**：如果其他设备访问不到，把服务端的 IP 换成局域网 IP（如 `ws://192.168.1.x:8080`），客户端 URL 也相应改一下
 - **外网部署**：生产环境服务端务必用 `wss://`（加 TLS 代理，如 Nginx），客户端用 `wss://`
 - **关闭码**：示例中客户端没有发关闭码，如果需要优雅关闭，可以在 `close()` 前先发一条 `{ type: 'leave' }` 消息
 - **消息频率**：聊天场景消息量不大，但如果是高频数据流（如游戏），建议用二进制协议并控制帧率
+
+## 延伸阅读
+
+- [WebRTC：信令机制](/webrtc/signaling) — 用 WebSocket 当信令通道交换 SDP / ICE
+- [Web Worker：基础用法](/webworker/basic) — 把 WebSocket 放进 SharedWorker，多 Tab 复用一条连接
+- [Web Crypto：基础用法](/webcrypto/basic) — 给消息加签名防伪造

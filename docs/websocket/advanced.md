@@ -218,32 +218,113 @@ ws.onopen = () => {
 
 ## 二进制协议设计
 
-对于高性能场景，可以设计一个简单的二进制协议来减少解析开销：
+游戏、IoT、高频交易这类场景，JSON 的解析开销和体积都不可接受。设计一个紧凑的二进制协议能省下数倍带宽。
+
+### 帧格式
+
+最常见的"TLV（Type-Length-Value）"结构：
 
 ```
-[1字节:类型] [4字节:长度] [N字节:数据]
+| 1 字节  | 4 字节       | 4 字节   | N 字节   |
+| 消息类型 | 消息 ID（可选） | 数据长度 | payload  |
 ```
+
+8 字节定长头 + 变长 payload，总共比 JSON 小 30-70%。
+
+### 编解码
+
+先确保接收端用 `ArrayBuffer` 而不是 `Blob`：
 
 ```js
-// 发送
-function sendPacket(ws, type, data) {
-  const buffer = new ArrayBuffer(5 + data.byteLength);
-  const view = new DataView(buffer);
-  view.setUint8(0, type);          // 消息类型
-  view.setUint32(1, data.byteLength, false); // 大端长度
-  new Uint8Array(buffer, 5).set(new Uint8Array(data));
-  ws.send(buffer);
+const ws = new WebSocket('wss://example.com');
+ws.binaryType = 'arraybuffer';   // 默认是 'blob'，二进制场景必须改
+```
+
+完整的发送/接收：
+
+```js
+// 高级用法：定长头 + payload
+const HEADER = 9;  // 1 + 4 + 4
+
+function encode(type, msgId, payload) {
+  const data = typeof payload === 'string'
+    ? new TextEncoder().encode(payload)
+    : new Uint8Array(payload);
+
+  const buf = new ArrayBuffer(HEADER + data.byteLength);
+  const view = new DataView(buf);
+  view.setUint8(0, type);
+  view.setUint32(1, msgId, false);              // 大端
+  view.setUint32(5, data.byteLength, false);
+  new Uint8Array(buf, HEADER).set(data);
+  return buf;
 }
 
-// 接收
-ws.onmessage = (e) => {
-  const view = new DataView(e.data);
+function decode(buf) {
+  const view = new DataView(buf);
   const type = view.getUint8(0);
-  const len = view.getUint32(1, false);
-  const payload = e.data.slice(5, 5 + len);
-  console.log('类型:', type, '长度:', len);
+  const msgId = view.getUint32(1, false);
+  const len = view.getUint32(5, false);
+  const payload = new Uint8Array(buf, HEADER, len);
+  return { type, msgId, payload };
+}
+
+// 用法
+ws.send(encode(0x01, 42, JSON.stringify({ x: 100, y: 200 })));
+
+ws.onmessage = (e) => {
+  const { type, msgId, payload } = decode(e.data);
+  console.log('类型:', type, '消息ID:', msgId);
+  // payload 是 Uint8Array，按需 TextDecoder 解码或直接读字节
 };
 ```
+
+### 请求-响应配对
+
+带 `msgId` 后可以做"发出去 → 等回来"的 RPC 风格调用：
+
+```js
+const pending = new Map();
+let nextId = 1;
+
+function request(type, payload) {
+  const id = nextId++;
+  return new Promise((resolve, reject) => {
+    pending.set(id, { resolve, reject });
+    ws.send(encode(type, id, payload));
+    setTimeout(() => {
+      if (pending.has(id)) {
+        pending.delete(id);
+        reject(new Error('timeout'));
+      }
+    }, 5000);
+  });
+}
+
+ws.onmessage = (e) => {
+  const { type, msgId, payload } = decode(e.data);
+  const handler = pending.get(msgId);
+  if (handler) {
+    pending.delete(msgId);
+    handler.resolve(payload);
+  }
+};
+
+// 像调函数一样用
+const reply = await request(0x10, JSON.stringify({ q: 'hello' }));
+```
+
+### 体积对比
+
+同样一条 `{ "x": 100, "y": 200 }`：
+
+| 编码方式 | 体积 | 解析耗时（10 万次） |
+|---------|------|------|
+| JSON | 17 字节 | ~120ms |
+| MessagePack | 7 字节 | ~30ms |
+| 自定义二进制（2× int16） | 4 字节 | ~5ms |
+
+实际项目中，业务复杂时**优先考虑 [MessagePack](https://msgpack.org/) 或 [Protobuf](https://protobuf.dev/)**——既有二进制紧凑性，又不用自己造编解码。
 
 ## 调试技巧
 

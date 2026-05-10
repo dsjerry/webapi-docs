@@ -338,9 +338,26 @@ npx serve .
 # 打开 http://localhost:3000
 ```
 
+## 常见排错
+
+| 现象 | 原因 |
+|------|------|
+| `事务在 await fetch()/setTimeout 后失效` | 事务在异步等待期间被浏览器自动 commit；事务回调内**只能用 IndexedDB 自身的请求**，不能 `await` 非 IDB 操作 |
+| `onupgradeneeded` 没触发 | 版本号没递增；或第二个 Tab 还开着旧版本数据库，需要先 `db.close()` 再升级 |
+| `QuotaExceededError` | 用 `navigator.storage.estimate()` 看用量；调 `navigator.storage.persist()` 申请持久化 |
+| 多 Tab 同时升级时一直 `blocked` | 旧 Tab 没监听 `versionchange` 主动 `db.close()`，导致新 Tab 升级被卡死 |
+| 私密浏览模式数据丢失 | Firefox/Safari 私密模式 IndexedDB 进程退出即清空，无法持久化 |
+| `getAll()` 返回空但确认有数据 | 用错了 store/index 名；或用 `index.getAll(value)` 而不是 `store.getAll()` |
+
 ## 注意事项
 
 - **Service Worker 路径**：必须在网站根目录（或通过 `scope` 配置）才能缓存全站资源
 - **IndexedDB 在 SW 中可用**：Service Worker 中可以使用 IndexedDB，不需要额外配置
 - **更新 SW**：修改 `sw.js` 后需要触发 `skipWaiting` + `clients.claim()` 才能立即生效，否则要等所有标签页关闭
 - **IndexedDB 是异步的**：UI 更新要等 `await db.xxx()` 完成后再渲染
+
+## 延伸阅读
+
+- [IndexedDB：进阶用法](/indexeddb/advanced#存储配额管理) — 用 `navigator.storage.persist()` 防止数据被悄悄清掉
+- [Web Worker：基础用法](/webworker/basic) — 在 Worker 里读写 IndexedDB，主线程零阻塞
+- [Web Crypto：实战端到端加密笔记](/webcrypto/practical) — 给笔记内容加密后再存 IndexedDB
